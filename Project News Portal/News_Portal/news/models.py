@@ -1,11 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-
+# Класс авторы статей из пользователей
 class Author(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='author')
     rating = models.FloatField(default=0.0)
-
+    
     def update_rating(self):  # Метод обновления рейтинга
         # Рейтинг постов
         article_rating = Post.objects.filter(author=self).aggregate(models.Sum('rating'))['rating__sum'] or 0
@@ -16,22 +16,22 @@ class Author(models.Model):
 
         self.rating = article_rating * 3 + comment_rating + comment_rating_to_articles
         self.save()
-
+    # метод сброса значений рейтинга к default 
     def set_default_rating(self):
         self.rating = self._meta.get_field('rating').get_default()
         self.save()
-
+    # вывод в шаблоне пользователя 
     def __str__(self):
         return self.user.title()
 
-
+# класс категории постов
 class Category(models.Model):
     name = models.CharField(unique=True, max_length=50)
-
+# выволд в шаблоне названия категории
     def __str__(self):
         return self.name.title()
 
-
+# еласс посты (новости и статьи)
 class Post(models.Model):
     ARTICLE = 'article'
     NEWS = 'news'
@@ -64,7 +64,7 @@ class Post(models.Model):
         else:
             return self.text[:124] + '...'
 
-    def __str__(self):
+    def __str__(self):  # метод вывода в представление статьей с названием и ограничением текста в 20 симвлолов и новостей с названием 
         if self.post_type == 'article':
             return f'{self.title.title()}: {self.text[:20]}'
         else:
@@ -75,7 +75,7 @@ class PostCategory(models.Model):  #  Модель связей многие к�
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
 
-
+# класс комментарии
 class Comment(models.Model):
     text = models.TextField(default="Нет содержания")
     created_at = models.DateTimeField(auto_now_add=True)
